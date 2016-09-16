@@ -4,6 +4,8 @@ D'oh! is a simple, minimal library for handling errors in Clojure. Its only depe
 
 ## Usage
 
+![](https://clojars.org/doh/latest-version.svg)
+
 Often, I find myself writing a function that is likely to fail. I'd like to include error handling, but I haven't exactly thought out how I'd like to do that yet.
 
     (defn get-dog
