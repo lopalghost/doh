@@ -49,6 +49,15 @@
                  :ret-spec (s/spec string?)
                  :retry string)
                (handle-error ::destructure {:string "Destructured"})))))
+  (testing "Allows a keyword spec"
+    (is (= "good keyword spec"
+           (do (s/def ::string string?)
+               (def-err ::key-spec
+                 [ctx]
+                 :ret-spec ::string
+                 :retry (:string ctx)
+                 :on-fail (swap! test-state conj (:string ctx)))
+               (handle-error ::key-spec {:string "good keyword spec"})))))
   (testing "Spec passed into context"
     (is (= "a spec"
            (do (def-err ::spec-handler

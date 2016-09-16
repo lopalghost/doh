@@ -25,7 +25,7 @@
 
 (s/def ::ret-spec (s/cat :key #(= :ret-spec %)
                          :body (s/or :spec #(s/spec? (eval %))
-                                     :keyword #(s/spec? (s/get-spec %)))))
+                                     :keyword #(s/spec? (s/get-spec (eval %))))))
 
 (s/def ::retry (s/cat :key #(= :retry %)
                       :body any?))
