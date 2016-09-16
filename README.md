@@ -2,9 +2,32 @@
 
 D'oh! is a simple, minimal library for handling errors in Clojure. Its only dependency is Clojure 1.9.
 
-## Usage
+## Quick Start
 
 ![](https://clojars.org/doh/latest-version.svg)
+
+Insert an error handler into a function, with a handler type (namespaced keyword) and a context map:
+
+    (require '[doh.core :refer [handle-error def-err]])
+    
+    (defn my-fn
+      [x]
+      (let [result (do-stuff x)]
+        (if (valid? result)
+          result
+          (handle-error ::bad-result {:x x}))))
+          
+```handle-error``` always returns ```nil``` if it does not produce a valid result, so we can always treat non-nil evaluations of ```my-fn``` as valid.
+          
+*30 minutes in the hammock later*
+
+    (def-err ::bad-result
+      [ctx]
+      ::retry (do-stuff (fix-x (:x ctx)))
+      ::ret-spec ::x-spec
+      ::on-fail (println "x cannot be fixed"))
+
+## Usage
 
 Often, I find myself writing a function that is likely to fail. I'd like to include error handling, but I haven't exactly thought out how I'd like to do that yet.
 
@@ -18,7 +41,7 @@ Often, I find myself writing a function that is likely to fail. I'd like to incl
 
 D'oh! uses clojure.spec to let you put in a generic error handler and implement it later. The handler is guaranteed to either return valid data or nil.
     
-    (require '[doh.core :refer [handle-error]])
+    (require '[doh.core :refer [handle-error def-err]])
     (require '[clojure.spec :as s])
     (s/def ::dog (s/keys :req-un [::name ::breed ::age]))
   
