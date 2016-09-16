@@ -12,7 +12,7 @@
                              (symbol? args) [args args])]
     `(defmethod handle-error ~err-key
        [~'_ ~arg-body]
-       (let [~ctx-sym (assoc ~ctx-sym :ret-spec ~ret-spec)
+       (let [~ctx-sym (assoc ~ctx-sym :doh/ret-spec ~ret-spec)
              result# ~retry]
          (if (and result#
                   (s/valid? ~ret-spec result#))
@@ -47,4 +47,20 @@
                                        :on-fail ::on-fail
                                        :return ::return))))
 
+(defmacro handle-exception
+  [handler-body ctx & body]
+  (let [catch-body (if (keyword? handler-body)
+                     `((catch Throwable e#
+                         (handle-error ~handler-body (assoc ~ctx :doh/exception e#))))
+                     (for [[ex-type handler] handler-body]
+                       `(catch ~ex-type e#
+                          (handle-error ~handler (assoc ~ctx :doh/exception e#)))))]
+    `(try ~@body
+          ~@catch-body)))
 
+(s/fdef handle-exception
+        :args (s/cat :handler-body (s/or :single keyword?
+                                         :many (s/map-of symbol? ::ns-keyword))
+                     :ctx (s/or :symbol symbol?
+                                :map map?)
+                     :body (s/+ any?)))

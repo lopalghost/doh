@@ -3,6 +3,7 @@
             [clojure.spec :as s]
             [doh.core :refer :all]))
 
+(declare test-state)
 (use-fixtures :each (fn [f]
                       (def test-state (atom []))
                       (f)))
@@ -55,8 +56,39 @@
                  :ret-spec (s/spec string?)
                  :retry (:string ctx)
                  :on-fail (swap! test-state conj
-                                 (s/conform (:ret-spec ctx (s/spec number?)) "a spec")))
+                                 (s/conform (:doh/ret-spec ctx (s/spec number?)) "a spec")))
                (handle-error ::spec-handler {})
                (peek @test-state))))))
+
+(deftest handle-exception-test
+  (testing "Catches and handles an exception"
+    (is (= "an exception"
+           (do (def-err ::exception
+                 [ctx]
+                 :ret-spec (s/spec string?)
+                 :retry (-> ctx :doh/exception ex-data :message))
+               (handle-exception
+                ::exception
+                {}
+                (throw (ex-info "Exception!" {:message "an exception"})))))))
+  (testing "Catches and handles multiple exceptions"
+    (do (def-err ::null-pointer
+          [ctx]
+          :ret-spec (s/spec string?)
+          :retry "null pointer exception")
+        (def-err ::divide-by-zero
+          [ctx]
+          :ret-spec (s/spec string?)
+          :retry "arithmetic exception"))
+    (is (= "null pointer exception"
+           (handle-exception {NullPointerException ::null-pointer
+                              ArithmeticException ::divide-by-zero}
+                             {}
+                             (/ 42 nil))))
+    (is (= "arithmetic exception"
+           (handle-exception {NullPointerException ::null-pointer
+                              ArithmeticException ::divide-by-zero}
+                             {}
+                             (/ 42 0))))))
 
 
