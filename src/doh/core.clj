@@ -4,12 +4,14 @@
 (defmulti handle-error (fn [err-key _] err-key))
 
 (defmacro def-err
-  [err-key [args] & {:keys [ret-spec retry on-fail return] :or {ret-spec `(s/spec any?)}}]
+  [err-key [args] & {:keys [ret-spec retry on-fail return]}]
   (let [[arg-body ctx-sym] (cond
                              (map? args) (if (:as args)
                                            [args (:as args)]
                                            [(assoc args :as 'ctx) 'ctx])
-                             (symbol? args) [args args])]
+                             (symbol? args) [args args])
+        ret-spec (or ret-spec
+                     `(s/spec any?))]
     `(defmethod handle-error ~err-key
        [~'_ ~arg-body]
        (let [~ctx-sym (assoc ~ctx-sym :doh/ret-spec ~ret-spec)

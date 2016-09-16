@@ -4,8 +4,9 @@
             [doh.core :refer :all]))
 
 (declare test-state)
+(s/def ::string string?)
 (use-fixtures :each (fn [f]
-                      (def test-state (atom []))
+                      (def test-state (atom [])) 
                       (f)))
 
 (deftest def-err-test
@@ -51,8 +52,7 @@
                (handle-error ::destructure {:string "Destructured"})))))
   (testing "Allows a keyword spec"
     (is (= "good keyword spec"
-           (do (s/def ::string string?)
-               (def-err ::key-spec
+           (do (def-err ::key-spec
                  [ctx]
                  :ret-spec ::string
                  :retry (:string ctx)
